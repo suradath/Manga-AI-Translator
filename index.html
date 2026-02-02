@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือแปลมังงะ</title>
+    <link rel="icon" type="image/png" href="comic.png">
+    <link rel="stylesheet" href="style.css">
+    <!-- Tesseract.js for OCR (Local) -->
+    <script src="lib/tesseract.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Canvas Area -->
+        <div class="canvas-area">
+            <div class="toolbar">
+                <input type="file" id="imageUpload" accept="image/*">
+                <button id="clearCanvasBtn">ล้างหน้าจอ</button>
+                <button id="downloadBtn" style="background-color: #28a745;">บันทึกรูปภาพ</button>
+            </div>
+            <div id="canvasWrapper">
+                <canvas id="mangaCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="side-panel">
+            <h2>เครื่องมือและแก้ไข</h2>
+            
+            <div class="panel-section">
+                <h3>การตั้งค่า</h3>
+                <label for="ocrLang">เลือกภาษา (OCR):</label>
+                <select id="ocrLang">
+                    <option value="jpn">Japanese (ญี่ปุ่น)</option>
+                    <option value="eng">English (อังกฤษ)</option>
+                    <option value="chi_sim">Chinese Simplified (จีนตัวย่อ)</option>
+                    <option value="chi_tra">Chinese Traditional (จีนตัวเต็ม)</option>
+                    <option value="kor">Korean (เกาหลี)</option>
+                </select>
+
+                <label for="providerSelect">ผู้ให้บริการ (Provider):</label>
+                <select id="providerSelect">
+                    <option value="openrouter">OpenRouter (แนะนำ)</option>
+                    <option value="google">Google Gemini API</option>
+                    <option value="deepseek">DeepSeek API</option>
+                    <option value="openai">OpenAI API</option>
+                </select>
+
+                <label for="apiKey">
+                    รหัส API (Key): 
+                    <span id="apiKeyStatus" style="font-size: 0.8em; color: #dc3545; font-weight: normal; margin-left: 5px;">(ไม่ได้บันทึก)</span>
+                </label>
+                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                    <input type="password" id="apiKey" placeholder="sk-or-..." style="flex: 1; min-width: 0; height: 60px; resize: vertical; font-family: monospace; padding: 8px;">
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <button id="pasteApiBtn" title="วางจากคลิปบอร์ด" style="flex: 1; padding: 5px;">วาง (Paste)</button>
+                    <button id="saveApiBtn" style="flex: 1; padding: 5px; background-color: #007bff; color: white;">บันทึกและตรวจสอบ</button>
+                </div>
+                
+                <label for="modelSelect">โมเดล (Model):</label>
+                <select id="modelSelect">
+                    <!-- Populated by JS -->
+                </select>
+
+                
+            </div>
+
+            <div class="panel-section">
+                <h3>เครื่องมือแปลภาษาฟรี</h3>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">
+                    เลือกบริการแปลฟรี (Web APIs) - อาจมีข้อจำกัดการใช้งาน
+                </p>
+                <label for="freeService">บริการ (Service):</label>
+                <select id="freeService" style="width: 100%; margin-bottom: 5px;">
+                    <option value="google_gtx">Google Translate (Auto)</option>
+                    <option value="mymemory">MyMemory (Translated.net)</option>
+                    <option value="simplytranslate">SimplyTranslate AI</option>
+                </select>
+                
+                
+                <div style="margin-top: 10px; font-size: 0.85em;">
+                    <a href="https://translate.google.com/" target="_blank">Google Web</a> | 
+                    <a href="https://www.deepl.com/translator" target="_blank">DeepL</a> | 
+                    <a href="https://papago.naver.com/" target="_blank">Papago</a>
+                </div>
+            </div>
+
+            <div class="panel-section" id="selectionInfo" style="display:none;">
+                <h3>การเลือก (Selection)</h3>
+                <div class="ocr-status" id="ocrStatus">พร้อมทำงาน</div>
+                
+                <label>ข้อความต้นฉบับ (OCR):</label>
+                <textarea id="originalText" rows="4"></textarea>
+                <button id="translateBtn">AI Translate (แปลภาษา)</button>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <label for="autoTranslateToggle" style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="autoTranslateToggle" checked style="margin-right: 8px;">
+                        แปลอัตโนมัติ (Auto Translate)
+                    </label>
+                </div>
+                <button id="freeTranslateBtn" style="width: 100%; background-color: #17a2b8; color: white;">แปลฟรี (Translate Free)</button>
+                <label>คำแปล:</label>
+                <textarea id="translatedText" rows="4"></textarea>
+
+                <h4>การตกแต่ง (Styling)</h4>
+                <div class="style-controls">
+                    <!-- Format Controls like MS Word -->
+                    <div class="format-toolbar">
+                        <button id="boldBtn" class="icon-btn" title="ตัวหนา"><b>B</b></button>
+                        <button id="italicBtn" class="icon-btn" title="ตัวเอียง"><i>I</i></button>
+                        <span class="separator">|</span>
+                        <button id="alignLeftBtn" class="icon-btn" title="ชิดซ้าย">L</button>
+                        <button id="alignCenterBtn" class="icon-btn active" title="จัดกลาง">C</button>
+                        <button id="alignRightBtn" class="icon-btn" title="ชิดขวา">R</button>
+                    </div>
+
+                    <label>แบบอักษร: 
+                        <select id="fontFamily" style="width: 150px;">
+                            <option value="Arial">Arial</option>
+                            <option value="Tahoma">Tahoma</option>
+                            <option value="Courier New">Courier</option>
+                            <option value="Times New Roman">Times</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Sarabun">Sarabun (TH)</option>
+                            <!-- Custom Fonts from fonts/ folder -->
+							<option value="RDDaotok">ดาวตก</option>
+                            <option value="PANISriracha">ศรีราชา</option>
+							<option value="JaoMilk">เจ้าชานม</option>
+                            <option value="FkAmour">FkAmour</option>
+							<option value="iannnnn-MONKEY">iannnnn-MONKEY</option>
+                        </select>
+                    </label>
+                    <label>ขนาด: <input type="number" id="fontSize" value="20"> px</label>
+                    <label>สี: <input type="color" id="textColor" value="#000000"></label>
+                    <label>ขอบ: <input type="number" id="textStroke" value="2"> px</label>
+                    <label>สีขอบ: <input type="color" id="strokeColor" value="#ffffff"></label>
+                    <label>หมุน: <input type="range" id="textRotation" min="-180" max="180" value="0"> <span id="rotationVal">0</span>°</label>
+                    <label>ถมพื้นหลัง: <input type="checkbox" id="enablePatch" checked></label>
+                </div>
+                
+                <button id="applyTextBtn">แสดงข้อความ (Render)</button>
+                <button id="deleteBoxBtn" style="background-color: #ff4444; color: white;">ลบกล่อง</button>
+            </div>
+
+            <div class="panel-section">
+                <p class="help-text">
+                    1. อัปโหลดรูปภาพ<br>
+                    2. ลากเพื่อเลือกพื้นที่ข้อความ<br>
+                    3. ระบบจะอ่านและแปลภาษา<br>
+                    4. แก้ไขและแสดงผล
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

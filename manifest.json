@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Manga Translator Tool",
+  "version": "1.0",
+  "description": "AI-powered Manga Translation Tool with OCR and Inpainting",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Manga Translator",
+    "default_icon": {
+      "16": "comic.png",
+      "48": "comic.png",
+      "128": "comic.png"
+    }
+  },
+  "icons": {
+    "16": "comic.png",
+    "48": "comic.png",
+    "128": "comic.png"
+  },
+  "permissions": ["activeTab"],
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/*", "comic.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self'; connect-src * data: blob: filesystem:;"
+  }
+}
