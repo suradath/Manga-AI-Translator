@@ -1,4 +1,4 @@
-# Manga Translator Tool (เครื่องมือแปลมังงะ)
+# Manga Translator Tool (เครื่องมือแปลมังงะ) Chrome Extensions
 
 [English Version](#english-version) | [เวอร์ชันภาษาไทย](#thai-version)
 
